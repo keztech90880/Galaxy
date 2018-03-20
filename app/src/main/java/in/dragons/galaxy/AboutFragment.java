@@ -15,7 +15,7 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-public class AboutFragment extends Fragment {
+public class AboutFragment extends UtilFragment {
 
     private View v;
 
@@ -29,6 +29,7 @@ public class AboutFragment extends Fragment {
 
         v = inflater.inflate(R.layout.app_abt_inc, container, false);
         getActivity().setTitle(R.string.action_about);
+        setSearchView(this,false);
 
         drawVersion();
         drawActions();

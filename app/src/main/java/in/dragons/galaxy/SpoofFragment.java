@@ -16,10 +16,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.percolate.caffeine.ViewUtils;
+
 import java.util.Properties;
 import java.util.TimeZone;
 
-public class SpoofFragment extends Fragment {
+public class SpoofFragment extends UtilFragment {
 
     private String deviceName;
     private ImageView spoofed;
@@ -37,6 +39,7 @@ public class SpoofFragment extends Fragment {
 
         v = inflater.inflate(R.layout.app_device_inc, container, false);
         getActivity().setTitle(R.string.action_spoofed);
+        setSearchView(this,false);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getActivity());
         deviceName = sharedPreferences.getString(PreferenceFragment.PREFERENCE_DEVICE_TO_PRETEND_TO_BE, "");

@@ -24,7 +24,7 @@ import in.dragons.galaxy.task.playstore.EndlessScrollTaskHelper;
 import in.dragons.galaxy.view.AppBadge;
 import in.dragons.galaxy.view.ListItem;
 
-public abstract class BaseFragment extends Fragment {
+public abstract class BaseFragment extends UtilFragment {
 
     protected ListView listView;
     protected Map<String, ListItem> listItems = new HashMap<>();

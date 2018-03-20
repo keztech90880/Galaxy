@@ -45,6 +45,7 @@ public class UpdatableAppsFragment extends AppListFragment {
         v = inflater.inflate(R.layout.app_updatable_inc, container, false);
 
         setupListView(v, R.layout.two_line_list_item_with_icon);
+        setSearchView(this,true);
 
         loadApps();
 

@@ -8,6 +8,9 @@ import android.preference.ListPreference;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.View;
+
+import com.percolate.caffeine.ViewUtils;
 
 import in.dragons.galaxy.fragment.preference.Blacklist;
 import in.dragons.galaxy.fragment.preference.CheckUpdates;
@@ -69,6 +72,7 @@ public class PreferenceFragment extends android.preference.PreferenceFragment {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.settings);
         getActivity().setTitle(R.string.action_settings);
+        ViewUtils.findViewById(this.getActivity(),R.id.search_toolbar).setVisibility(View.GONE);
 
         drawBlackList();
         drawLanguages();

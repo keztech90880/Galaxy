@@ -14,7 +14,7 @@ import com.percolate.caffeine.ViewUtils;
 import in.dragons.galaxy.task.playstore.CategoryListTaskHelper;
 
 
-public class CategoryListFragment extends Fragment {
+public class CategoryListFragment extends UtilFragment {
 
     private View v;
 
@@ -27,7 +27,7 @@ public class CategoryListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.categories_activity_layout, container, false);
         getActivity().setTitle(getString(R.string.action_categories));
-
+        setSearchView(this,true);
         CategoryManager manager = new CategoryManager(this.getActivity());
         getTask(manager).execute();
 

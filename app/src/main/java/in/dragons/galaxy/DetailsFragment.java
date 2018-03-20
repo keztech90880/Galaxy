@@ -27,7 +27,7 @@ import in.dragons.galaxy.model.App;
 import in.dragons.galaxy.task.playstore.CloneableTask;
 import in.dragons.galaxy.task.playstore.DetailsTask;
 
-public class DetailsFragment extends Fragment {
+public class DetailsFragment extends UtilFragment {
 
     static private final String INTENT_PACKAGE_NAME = "INTENT_PACKAGE_NAME";
 
@@ -52,6 +52,7 @@ public class DetailsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.details_activity_layout, container, false);
+        setSearchView(this,true);
         return v;
     }
 

@@ -20,7 +20,7 @@ import com.percolate.caffeine.PhoneUtils;
 import com.percolate.caffeine.ViewUtils;
 import com.squareup.picasso.Picasso;
 
-public class AccountsFragment extends Fragment {
+public class AccountsFragment extends UtilFragment {
 
     private AccountTypeDialogBuilder accountTypeDialogBuilder;
     private SharedPreferences sharedPreferences;
@@ -42,6 +42,7 @@ public class AccountsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.app_acc_inc, container, false);
         getActivity().setTitle(R.string.action_accounts);
+        setSearchView(this,false);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         Email = sharedPreferences.getString(PlayStoreApiAuthenticator.PREFERENCE_EMAIL, "");

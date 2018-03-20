@@ -26,7 +26,7 @@ import in.dragons.galaxy.model.App;
 import in.dragons.galaxy.view.AppBadge;
 import in.dragons.galaxy.view.ListItem;
 
-abstract public class AppListFragment extends Fragment {
+abstract public class AppListFragment extends UtilFragment {
 
     protected ListView listView;
     protected Map<String, ListItem> listItems = new HashMap<>();

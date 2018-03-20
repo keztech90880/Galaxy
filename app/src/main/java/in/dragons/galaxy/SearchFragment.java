@@ -43,6 +43,7 @@ public class SearchFragment extends EndlessScrollFragment {
         v = inflater.inflate(R.layout.app_endless_inc, container, false);
 
         setupListView(v);
+        setSearchView(this,true);
 
         getListView().setOnScrollListener(new ScrollEdgeListener() {
             @Override

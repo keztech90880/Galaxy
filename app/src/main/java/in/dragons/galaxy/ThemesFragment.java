@@ -13,8 +13,9 @@ import android.widget.TextView;
 
 import com.afollestad.aesthetic.Aesthetic;
 import com.afollestad.materialdialogs.color.ColorChooserDialog;
+import com.percolate.caffeine.ViewUtils;
 
-public class ThemesFragment extends Fragment {
+public class ThemesFragment extends UtilFragment {
 
     private View v;
 
@@ -28,6 +29,7 @@ public class ThemesFragment extends Fragment {
 
         v = inflater.inflate(R.layout.app_theme_inc, container, false);
         getActivity().setTitle(R.string.action_themes);
+        setSearchView(this,false);
 
         setupSelection();
         setupTheme();

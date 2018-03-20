@@ -1,29 +1,26 @@
 package in.dragons.galaxy;
 
-import android.app.Activity;
-import android.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.percolate.caffeine.ViewUtils;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import in.dragons.galaxy.fragment.details.ButtonDownload;
 import in.dragons.galaxy.fragment.details.ButtonUninstall;
 import in.dragons.galaxy.fragment.details.DownloadOptions;
 import in.dragons.galaxy.model.App;
 import in.dragons.galaxy.view.AppBadge;
+import in.dragons.galaxy.view.InstalledAppBadge;
 import in.dragons.galaxy.view.ListItem;
 
 abstract public class AppListFragment extends UtilFragment {
@@ -34,22 +31,6 @@ abstract public class AppListFragment extends UtilFragment {
 
     abstract public void loadApps();
 
-    abstract protected ListItem getListItem(App app);
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
@@ -92,7 +73,7 @@ abstract public class AppListFragment extends UtilFragment {
         }
     }
 
-    public void setupListView(View v, int layoutId) {
+    protected void setupListView(View v, int layoutId) {
         View emptyView = v.findViewById(android.R.id.empty);
         listView = ViewUtils.findViewById(v, android.R.id.list);
         listView.setNestedScrollingEnabled(true);
@@ -104,7 +85,13 @@ abstract public class AppListFragment extends UtilFragment {
         }
     }
 
-    public void grabDetails(int position) {
+    protected ListItem getListItem(App app) {
+        InstalledAppBadge appBadge = new InstalledAppBadge();
+        appBadge.setApp(app);
+        return appBadge;
+    }
+
+    protected void grabDetails(int position) {
         DetailsFragment.app = getAppByListPosition(position);
         DetailsFragment detailsFragment = new DetailsFragment();
         Bundle arguments = new Bundle();
@@ -121,11 +108,11 @@ abstract public class AppListFragment extends UtilFragment {
         return ((AppBadge) listItem).getApp();
     }
 
-    public void addApps(List<App> appsToAdd) {
+    protected void addApps(List<App> appsToAdd) {
         addApps(appsToAdd, true);
     }
 
-    public void addApps(List<App> appsToAdd, boolean update) {
+    protected void addApps(List<App> appsToAdd, boolean update) {
         AppListAdapter adapter = (AppListAdapter) getListView().getAdapter();
         adapter.setNotifyOnChange(false);
         for (App app : appsToAdd) {
@@ -138,21 +125,35 @@ abstract public class AppListFragment extends UtilFragment {
         }
     }
 
-    public void removeApp(String packageName) {
+    protected void removeApp(String packageName) {
         ((AppListAdapter) getListView().getAdapter()).remove(listItems.get(packageName));
         listItems.remove(packageName);
     }
 
-    public Set<String> getListedPackageNames() {
-        return listItems.keySet();
-    }
-
-    public void clearApps() {
+    protected void clearApps() {
         listItems.clear();
         ((AppListAdapter) getListView().getAdapter()).clear();
     }
 
-    public ListView getListView() {
+    protected void setProgress() {
+        ViewUtils.findViewById(this.getActivity(), R.id.progress).setVisibility(View.VISIBLE);
+    }
+
+    protected void removeProgress() {
+        ViewUtils.findViewById(this.getActivity(), R.id.progress).setVisibility(View.GONE);
+    }
+
+    protected ListView getListView() {
         return listView;
+    }
+
+    protected void setText(int viewId, String text) {
+        TextView textView = ViewUtils.findViewById(this.getActivity(), viewId);
+        if (null != textView)
+            textView.setText(text);
+    }
+
+    protected void setText(int viewId, int stringId, Object... text) {
+        setText(viewId, this.getString(stringId, text));
     }
 }

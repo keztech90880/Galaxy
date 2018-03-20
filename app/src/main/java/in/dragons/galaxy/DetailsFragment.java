@@ -1,15 +1,14 @@
 package in.dragons.galaxy;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.trello.rxlifecycle2.android.FragmentEvent;
 
 import in.dragons.galaxy.fragment.details.AppLists;
 import in.dragons.galaxy.fragment.details.BackToPlayStore;
@@ -24,35 +23,28 @@ import in.dragons.galaxy.fragment.details.Share;
 import in.dragons.galaxy.fragment.details.SystemAppPage;
 import in.dragons.galaxy.fragment.details.Video;
 import in.dragons.galaxy.model.App;
-import in.dragons.galaxy.task.playstore.CloneableTask;
-import in.dragons.galaxy.task.playstore.DetailsTask;
+import in.dragons.galaxy.task.playstore.ForegroundDetailsAppsTaskHelper;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
-public class DetailsFragment extends UtilFragment {
-
-    static private final String INTENT_PACKAGE_NAME = "INTENT_PACKAGE_NAME";
+public class DetailsFragment extends ForegroundDetailsAppsTaskHelper {
 
     protected View v;
     protected DownloadOrInstall downloadOrInstallFragment;
+    protected String packageName;
 
-    public static App app;
+    protected static App app;
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
     }
 
-    static public Intent getDetailsIntent(Context context, String packageName) {
-        Intent intent = new Intent(context, DetailsFragment.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        intent.putExtra(DetailsFragment.INTENT_PACKAGE_NAME, packageName);
-        return intent;
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.details_activity_layout, container, false);
-        setSearchView(this,true);
+        setSearchView(this, true);
         return v;
     }
 
@@ -61,11 +53,9 @@ public class DetailsFragment extends UtilFragment {
         super.onCreate(savedInstanceState);
 
         Bundle arguments = getArguments();
-        String packageName = arguments.getString("PackageName");
-        GetAndRedrawDetailsTask task = new GetAndRedrawDetailsTask(this);
-        task.setPackageName(packageName);
-        task.setProgressIndicator(getActivity().findViewById(R.id.progress));
-        task.execute();
+        packageName = arguments.getString("PackageName");
+
+        loadApps();
     }
 
     @Override
@@ -82,32 +72,18 @@ public class DetailsFragment extends UtilFragment {
         super.onResume();
     }
 
-   /* protected void onNewIntent(Intent intent) {
-        //super.onNewIntent(intent);
-        final String packageName = getIntentPackageName(intent);
-        if (TextUtils.isEmpty(packageName)) {
-            Log.e(this.getClass().getName(), "No package name provided");
-            getActivity().finish();
-            return;
-        }
-        Log.i(getClass().getSimpleName(), "Getting info about " + packageName);
+    @Override
+    public void loadApps() {
+        Observable.fromCallable(() -> getResult(new PlayStoreApiAuthenticator(this.getActivity()).getApi(), packageName))
+                .subscribeOn(Schedulers.io())
+                .compose(bindUntilEvent(FragmentEvent.PAUSE))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((result) -> {
 
-        if (null != DetailsFragment.app) {
-            redrawDetails(DetailsFragment.app);
-        }
+                    DetailsFragment.app = result;
+                    this.redrawDetails(result);
 
-        GetAndRedrawDetailsTask task = new GetAndRedrawDetailsTask(this);
-        task.setPackageName(packageName);
-        task.setProgressIndicator(getActivity().findViewById(R.id.progress));
-        task.execute();
-    }*/
-
-    private void redrawButtons() {
-        if (null != downloadOrInstallFragment) {
-            downloadOrInstallFragment.unregisterReceivers();
-            downloadOrInstallFragment.registerReceivers();
-            downloadOrInstallFragment.draw();
-        }
+                }, throwable -> processException(throwable));
     }
 
     @Override
@@ -121,20 +97,7 @@ public class DetailsFragment extends UtilFragment {
         return new DownloadOptions((GalaxyActivity) this.getActivity(), app).onContextItemSelected(item);
     }
 
-    private String getIntentPackageName(Intent intent) {
-        if (intent.hasExtra(INTENT_PACKAGE_NAME)) {
-            return intent.getStringExtra(INTENT_PACKAGE_NAME);
-        } else if (intent.getScheme() != null
-                && (intent.getScheme().equals("market")
-                || intent.getScheme().equals("http")
-                || intent.getScheme().equals("https")
-        )) {
-            return intent.getData().getQueryParameter("id");
-        }
-        return null;
-    }
-
-    public void redrawDetails(App app) {
+    private void redrawDetails(App app) {
         new GeneralDetails(this, app).draw();
         new Permissions(this, app).draw();
         new Screenshot(this, app).draw();
@@ -155,35 +118,11 @@ public class DetailsFragment extends UtilFragment {
         getActivity().setTitle(app.getDisplayName());
     }
 
-    static class GetAndRedrawDetailsTask extends DetailsTask implements CloneableTask {
-
-        private DetailsFragment detailsFragment;
-
-        public GetAndRedrawDetailsTask(DetailsFragment detailsFragment) {
-            this.detailsFragment = detailsFragment;
-            setContext(detailsFragment.getActivity());
-        }
-
-        @Override
-        public CloneableTask clone() {
-            GetAndRedrawDetailsTask task = new GetAndRedrawDetailsTask(detailsFragment);
-            task.setErrorView(errorView);
-            task.setPackageName(packageName);
-            task.setProgressIndicator(progressIndicator);
-            return task;
-        }
-
-        @Override
-        protected void onPostExecute(App app) {
-            super.onPostExecute(app);
-            if (app != null && ContextUtil.isAlive(detailsFragment.getActivity()) && isAlive()) {
-                DetailsFragment.app = app;
-                detailsFragment.redrawDetails(app);
-            }
-        }
-
-        private boolean isAlive() {
-            return (detailsFragment != null && detailsFragment.isVisible());
+    private void redrawButtons() {
+        if (null != downloadOrInstallFragment) {
+            downloadOrInstallFragment.unregisterReceivers();
+            downloadOrInstallFragment.registerReceivers();
+            downloadOrInstallFragment.draw();
         }
     }
 }

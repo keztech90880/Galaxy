@@ -1,10 +1,11 @@
 package in.dragons.galaxy;
 
-import android.app.Activity;
+import android.app.DownloadManager;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
+import android.support.design.widget.FloatingActionButton;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,83 +14,91 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.percolate.caffeine.ViewUtils;
+import com.trello.rxlifecycle2.android.FragmentEvent;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import in.dragons.galaxy.model.App;
-import in.dragons.galaxy.task.AppListValidityCheckTask;
 import in.dragons.galaxy.task.playstore.ForegroundUpdatableAppsTaskHelper;
-import in.dragons.galaxy.view.ListItem;
-import in.dragons.galaxy.view.UpdatableAppBadge;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
-public class UpdatableAppsFragment extends AppListFragment {
+import static android.content.Context.DOWNLOAD_SERVICE;
 
-    private UpdateAllReceiver updateAllReceiver;
+public class UpdatableAppsFragment extends ForegroundUpdatableAppsTaskHelper {
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-    }
-
-    View v;
+    private DownloadManager.Query query;
+    private DownloadManager dm;
+    private View v;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
+        this.setHasOptionsMenu(true);
+        this.setRetainInstance(true);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (v != null) {
+            if ((ViewGroup) v.getParent() != null)
+                ((ViewGroup) v.getParent()).removeView(v);
+            return v;
+        }
+
         getActivity().setTitle(getString(R.string.activity_title_updates_only));
 
         v = inflater.inflate(R.layout.app_updatable_inc, container, false);
 
         setupListView(v, R.layout.two_line_list_item_with_icon);
-        setSearchView(this,true);
+        setSearchView(this, true);
+        setupDelta();
+        setupFab();
 
         loadApps();
 
-        getListView().setOnItemClickListener((parent, view, position, id) -> {
-            grabDetails(position);
-        });
-
+        getListView().setOnItemClickListener((parent, view, position, id) -> grabDetails(position));
         registerForContextMenu(getListView());
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-
-        TextView delta = (TextView) v.findViewById(R.id.updates_setting);
-        delta.setText(sharedPreferences.getBoolean("PREFERENCE_DOWNLOAD_DELTAS", true) ? R.string.delta_enabled : R.string.delta_disabled);
-        delta.setVisibility(View.VISIBLE);
         return v;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        updateAllReceiver = new UpdateAllReceiver((GalaxyActivity) this.getActivity());
-        AppListValidityCheckTask task = new AppListValidityCheckTask((GalaxyActivity) this.getActivity());
-        task.setRespectUpdateBlacklist(true);
-        task.setIncludeSystemApps(true);
-        task.execute();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        getTask().cancel(true);
+        getActivity().setTitle(getString(R.string.activity_title_updates_only));
+        new UpdateAllReceiver((GalaxyActivity) this.getActivity());
+        checkAppListValidity();
     }
 
     @Override
     public void loadApps() {
-        getTask().execute();
-    }
+        setProgress();
+        Observable.fromCallable(() -> getResult(new PlayStoreApiAuthenticator(this.getActivity()).getApi()))
+                .subscribeOn(Schedulers.io())
+                .compose(bindUntilEvent(FragmentEvent.PAUSE))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((result) -> {
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        if (GalaxyPermissionManager.isGranted(requestCode, permissions, grantResults)) {
-            Log.i(getClass().getSimpleName(), "User granted the write permission");
-            launchUpdateAll();
-        }
+                    clearApps();
+                    Collections.sort(result);
+
+                    addApps(result);
+                    removeProgress();
+
+                    if (success() && result.isEmpty())
+                        ViewUtils.findViewById(v, R.id.unicorn).setVisibility(View.VISIBLE);
+                    else {
+                        setText(R.id.updates_txt, R.string.list_update_all_txt, result.size());
+                        setupButtons();
+                    }
+                }, this::processException);
     }
 
     @Override
@@ -110,33 +119,74 @@ public class UpdatableAppsFragment extends AppListFragment {
     }
 
     @Override
-    protected ListItem getListItem(App app) {
-        UpdatableAppBadge appBadge = new UpdatableAppBadge();
-        appBadge.setApp(app);
-        return appBadge;
-    }
-
-    @Override
     public void removeApp(String packageName) {
         super.removeApp(packageName);
-        if (listItems.isEmpty()) {
+        if (updatableApps.isEmpty()) {
             v.findViewById(R.id.unicorn).setVisibility(View.VISIBLE);
         }
     }
 
-    private ForegroundUpdatableAppsTaskHelper getTask() {
-        ForegroundUpdatableAppsTaskHelper task = new ForegroundUpdatableAppsTaskHelper(this);
-        task.setErrorView((TextView) getListView().getEmptyView());
-        task.setProgressIndicator(v.findViewById(R.id.progress));
-        return task;
+    @Override
+    protected void clearApps() {
+        ((AppListAdapter) getListView().getAdapter()).clear();
+    }
+
+    @Override
+    protected void setProgress() {
+        ViewUtils.findViewById(v, R.id.progress).setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    protected void removeProgress() {
+        ViewUtils.findViewById(v, R.id.progress).setVisibility(View.GONE);
     }
 
     public void launchUpdateAll() {
         ((GalaxyApplication) getActivity().getApplicationContext()).setBackgroundUpdating(true);
         new UpdateChecker().onReceive(UpdatableAppsFragment.this.getActivity(), getActivity().getIntent());
-        v.findViewById(R.id.update_all).setVisibility(View.GONE);
-        Button button = (Button) v.findViewById(R.id.update_cancel);
-        button.setVisibility(View.VISIBLE);
+        ViewUtils.findViewById(v, R.id.update_all).setVisibility(View.GONE);
+        ViewUtils.findViewById(v, R.id.update_cancel).setVisibility(View.VISIBLE);
+    }
+
+    public void setupFab() {
+        FloatingActionButton fab = ViewUtils.findViewById(this.getActivity(), R.id.fab);
+        fab.setVisibility(View.VISIBLE);
+        fab.setImageResource(R.drawable.ic_update);
+        fab.setOnClickListener(view -> loadApps());
+    }
+
+    public void setupButtons() {
+        Button update = ViewUtils.findViewById(v, R.id.update_all);
+        Button cancel = ViewUtils.findViewById(v, R.id.update_cancel);
+        TextView txt = ViewUtils.findViewById(v, R.id.updates_txt);
+
+        update.setVisibility(View.VISIBLE);
+
+        update.setOnClickListener(v -> {
+            launchUpdateAll();
+            update.setVisibility(View.GONE);
+            cancel.setVisibility(View.VISIBLE);
+            txt.setText(R.string.list_updating);
+        });
+
+        cancel.setOnClickListener(v -> {
+            query = new DownloadManager.Query();
+            query.setFilterByStatus(DownloadManager.STATUS_PENDING | DownloadManager.STATUS_RUNNING);
+            dm = (DownloadManager) this.getActivity().getSystemService(DOWNLOAD_SERVICE);
+            Cursor c = dm.query(query);
+            while (c.moveToNext()) {
+                dm.remove(c.getLong(c.getColumnIndex(DownloadManager.COLUMN_ID)));
+            }
+            update.setVisibility(View.VISIBLE);
+            cancel.setVisibility(View.GONE);
+            setText(R.id.updates_txt, R.string.list_update_all_txt, updatableApps.size());
+        });
+    }
+
+    public void setupDelta() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        TextView delta = ViewUtils.findViewById(v, R.id.updates_setting);
+        delta.setText(sharedPreferences.getBoolean("PREFERENCE_DOWNLOAD_DELTAS", true) ? R.string.delta_enabled : R.string.delta_disabled);
+        delta.setVisibility(View.VISIBLE);
     }
 }
-

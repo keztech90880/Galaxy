@@ -1,6 +1,5 @@
 package in.dragons.galaxy;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -8,50 +7,60 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.percolate.caffeine.ViewUtils;
+import com.trello.rxlifecycle2.android.FragmentEvent;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import in.dragons.galaxy.fragment.FilterMenu;
 import in.dragons.galaxy.model.App;
-import in.dragons.galaxy.task.AppListValidityCheckTask;
 import in.dragons.galaxy.task.ForegroundInstalledAppsTaskHelper;
-import in.dragons.galaxy.task.playstore.ForegroundUpdatableAppsTaskHelper;
-import in.dragons.galaxy.view.InstalledAppBadge;
-import in.dragons.galaxy.view.ListItem;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
-public class InstalledAppsFragment extends AppListFragment {
+public class InstalledAppsFragment extends ForegroundInstalledAppsTaskHelper {
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-    }
-
-    View v;
+    private boolean includeSystemApps;
+    private Map<String, App> installedApps = new HashMap<>();
+    private View v;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
+        this.setHasOptionsMenu(true);
+        this.setRetainInstance(true);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (v != null) {
+            if ((ViewGroup) v.getParent() != null)
+                ((ViewGroup) v.getParent()).removeView(v);
+            return v;
+        }
+
         getActivity().setTitle(R.string.activity_title_updates_and_other_apps);
 
         v = inflater.inflate(R.layout.app_installed_inc, container, false);
 
         setupListView(v, R.layout.two_line_list_item_with_icon);
-        setSearchView(this,true);
+        setSearchView(this, true);
 
-        clearApps();
         loadApps();
 
         getListView().setOnItemClickListener((parent, view, position, id) -> {
             grabDetails(position);
         });
+
+        includeSystemApps = new FilterMenu((GalaxyActivity) this.getActivity()).getFilterPreferences().isSystemApps();
 
         registerForContextMenu(getListView());
         return v;
@@ -60,28 +69,25 @@ public class InstalledAppsFragment extends AppListFragment {
     @Override
     public void onResume() {
         super.onResume();
-        AppListValidityCheckTask task = new AppListValidityCheckTask((GalaxyActivity) this.getActivity());
-        task.setIncludeSystemApps(new FilterMenu((GalaxyActivity) this.getActivity()).getFilterPreferences().isSystemApps());
-        task.execute();
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
+        getActivity().setTitle(R.string.activity_title_updates_and_other_apps);
+        checkAppListValidity();
     }
 
     @Override
     public void loadApps() {
-        ForegroundInstalledAppsTaskHelper task = new ForegroundInstalledAppsTaskHelper(this);
-        task.setProgressIndicator(v.findViewById(R.id.progress));
-        task.execute();
-    }
-
-    @Override
-    protected ListItem getListItem(App app) {
-        InstalledAppBadge appBadge = new InstalledAppBadge();
-        appBadge.setApp(app);
-        return appBadge;
+        setProgress();
+        setIncludeSystemApps(includeSystemApps);
+        Observable.fromCallable(() -> getInstalledApps(true, installedApps))
+                .subscribeOn(Schedulers.io())
+                .compose(bindUntilEvent(FragmentEvent.PAUSE))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((result) -> {
+                    clearApps();
+                    List<App> installedApps = new ArrayList<>(result.values());
+                    Collections.sort(installedApps);
+                    addApps(installedApps);
+                    removeProgress();
+                });
     }
 
     @Override
@@ -97,4 +103,15 @@ public class InstalledAppsFragment extends AppListFragment {
         super.onCreateContextMenu(menu, v, menuInfo);
         menu.findItem(R.id.action_flag).setVisible(false);
     }
+
+    @Override
+    protected void setProgress() {
+        ViewUtils.findViewById(v, R.id.progress).setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    protected void removeProgress() {
+        ViewUtils.findViewById(v, R.id.progress).setVisibility(View.GONE);
+    }
+
 }

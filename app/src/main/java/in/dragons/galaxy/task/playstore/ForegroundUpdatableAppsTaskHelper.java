@@ -1,115 +1,203 @@
 package in.dragons.galaxy.task.playstore;
 
-import android.app.DownloadManager;
-import android.database.Cursor;
+import android.preference.PreferenceManager;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
+import com.github.yeriomin.playstoreapi.AuthException;
+import com.github.yeriomin.playstoreapi.BulkDetailsEntry;
 import com.github.yeriomin.playstoreapi.GooglePlayAPI;
-import com.percolate.caffeine.ViewUtils;
 
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import javax.net.ssl.SSLHandshakeException;
+
+import in.dragons.galaxy.AccountTypeDialogBuilder;
+import in.dragons.galaxy.AppListFragment;
 import in.dragons.galaxy.BlackWhiteListManager;
 import in.dragons.galaxy.BuildConfig;
 import in.dragons.galaxy.ContextUtil;
+import in.dragons.galaxy.CredentialsEmptyException;
+import in.dragons.galaxy.FirstLaunchChecker;
+import in.dragons.galaxy.GalaxyActivity;
+import in.dragons.galaxy.PlayStoreApiAuthenticator;
+import in.dragons.galaxy.PreferenceFragment;
 import in.dragons.galaxy.R;
-import in.dragons.galaxy.UpdatableAppsFragment;
 import in.dragons.galaxy.model.App;
+import in.dragons.galaxy.model.AppBuilder;
+import in.dragons.galaxy.task.AppListValidityCheckTask;
+import in.dragons.galaxy.task.InstalledAppsTask;
 
-import static android.content.Context.DOWNLOAD_SERVICE;
+public abstract class ForegroundUpdatableAppsTaskHelper extends AppListFragment {
 
-public class ForegroundUpdatableAppsTaskHelper extends UpdatableAppsTask implements CloneableTask {
+    protected TextView errorView;
+    protected View progressIndicator;
+    protected PlayStoreTask playStoreTask;
+    protected Throwable exception;
+    protected List<App> updatableApps = new ArrayList<>();
 
-    private UpdatableAppsFragment activity;
-    private Button update, cancel;
-    private TextView textView;
-    private DownloadManager.Query query;
-    private DownloadManager dm;
-
-    public ForegroundUpdatableAppsTaskHelper(UpdatableAppsFragment activity) {
-        this.activity = activity;
-        setContext(activity.getActivity());
-    }
-
-    @Override
-    public CloneableTask clone() {
-        ForegroundUpdatableAppsTaskHelper task = new ForegroundUpdatableAppsTaskHelper(this.activity);
-        task.setErrorView(errorView);
-        task.setProgressIndicator(progressIndicator);
-        return task;
-    }
-
-    @Override
-    protected List<App> getResult(GooglePlayAPI api, String... packageNames) throws IOException {
-        super.getResult(api, packageNames);
-        if (!new BlackWhiteListManager(context).isUpdatable(BuildConfig.APPLICATION_ID)) {
+    protected List<App> getResult(GooglePlayAPI api) throws IOException {
+        api.toc();
+        updatableApps.clear();
+        Map<String, App> installedApps = getInstalledApps();
+        for (App appFromMarket : getAppsFromPlayStore(api, filterBlacklistedApps(installedApps).keySet())) {
+            String packageName = appFromMarket.getPackageName();
+            if (TextUtils.isEmpty(packageName) || !installedApps.containsKey(packageName)) {
+                continue;
+            }
+            App installedApp = installedApps.get(packageName);
+            appFromMarket = addInstalledAppInfo(appFromMarket, installedApp);
+            if (installedApp.getVersionCode() < appFromMarket.getVersionCode()) {
+                updatableApps.add(appFromMarket);
+            }
+        }
+        if (!new BlackWhiteListManager(this.getActivity()).isUpdatable(BuildConfig.APPLICATION_ID)) {
             return updatableApps;
         }
         return updatableApps;
     }
 
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-        this.errorView.setText("");
+    protected List<App> getAppsFromPlayStore(GooglePlayAPI api, Collection<String> packageNames) throws IOException {
+        List<App> appsFromPlayStore = new ArrayList<>();
+        boolean builtInAccount = PreferenceFragment.getBoolean(this.getActivity(), PlayStoreApiAuthenticator.PREFERENCE_APP_PROVIDED_EMAIL);
+        for (App app : getRemoteAppList(api, new ArrayList<>(packageNames))) {
+            if (!builtInAccount || app.isFree()) {
+                appsFromPlayStore.add(app);
+            }
+        }
+        return appsFromPlayStore;
     }
 
-    @Override
-    protected void onPostExecute(List<App> result) {
-        super.onPostExecute(result);
-        activity.clearApps();
-        activity.addApps(updatableApps);
-
-        if (success() && updatableApps.isEmpty())
-            activity.getActivity().findViewById(R.id.unicorn).setVisibility(View.VISIBLE);
-        else {
-            if (ContextUtil.isAlive(activity.getActivity()) && isAlive()) {
-                setText(R.id.updates_txt, R.string.list_update_all_txt, updatableApps.size());
-                setupButtons();
+    protected List<App> getRemoteAppList(GooglePlayAPI api, List<String> packageNames) throws IOException {
+        List<App> apps = new ArrayList<>();
+        for (BulkDetailsEntry details : api.bulkDetails(packageNames).getEntryList()) {
+            if (!details.hasDoc()) {
+                continue;
             }
+            apps.add(AppBuilder.build(details.getDoc()));
+        }
+        Collections.sort(apps);
+        return apps;
+    }
+
+    protected Map<String, App> getInstalledApps() {
+        InstalledAppsTask task = new InstalledAppsTask();
+        task.setContext(this.getActivity());
+        task.setIncludeSystemApps(true);
+        return task.getInstalledApps(false);
+    }
+
+    protected App addInstalledAppInfo(App appFromMarket, App installedApp) {
+        if (null != installedApp) {
+            appFromMarket.setPackageInfo(installedApp.getPackageInfo());
+            appFromMarket.setVersionName(installedApp.getVersionName());
+            appFromMarket.setDisplayName(installedApp.getDisplayName());
+            appFromMarket.setSystem(installedApp.isSystem());
+            appFromMarket.setInstalled(true);
+        }
+        return appFromMarket;
+    }
+
+    protected Map<String, App> filterBlacklistedApps(Map<String, App> apps) {
+        Set<String> packageNames = new HashSet<>(apps.keySet());
+        if (PreferenceManager.getDefaultSharedPreferences(this.getActivity()).getString(PreferenceFragment.PREFERENCE_UPDATE_LIST_WHITE_OR_BLACK, PreferenceFragment.LIST_BLACK).equals(PreferenceFragment.LIST_BLACK)) {
+            packageNames.removeAll(new BlackWhiteListManager(this.getActivity()).get());
+        } else {
+            packageNames.retainAll(new BlackWhiteListManager(this.getActivity()).get());
+        }
+        Map<String, App> result = new HashMap<>();
+        for (App app : apps.values()) {
+            if (packageNames.contains(app.getPackageName())) {
+                result.put(app.getPackageName(), app);
+            }
+        }
+        return result;
+    }
+
+    //Exception Handling
+    protected boolean success() {
+        return null == exception;
+    }
+
+    protected void processException(Throwable e) {
+        Log.d(getClass().getSimpleName(), e.getClass().getName() + " caught during a google api request: " + e.getMessage());
+        if (e instanceof AuthException) {
+            processAuthException((AuthException) e);
+        } else if (e instanceof IOException) {
+            processIOException((IOException) e);
+        } else {
+            Log.e(getClass().getSimpleName(), "Unknown exception " + e.getClass().getName() + " " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    private boolean isAlive() {
-        UpdatableAppsFragment updatableAppsFragment = (UpdatableAppsFragment) activity.getFragmentManager().findFragmentByTag("UPDATES");
-        return (updatableAppsFragment != null && updatableAppsFragment.isVisible());
+    protected void processIOException(IOException e) {
+        String message;
+        if (noNetwork(e) && this.getActivity() != null) {
+            message = this.getActivity().getString(R.string.error_no_network);
+        } else {
+            message = TextUtils.isEmpty(e.getMessage())
+                    ? this.getActivity().getString(R.string.error_network_other, e.getClass().getName())
+                    : e.getMessage()
+            ;
+        }
+        ContextUtil.toastLong(this.getActivity(), message);
     }
 
-    private void setupButtons() {
-        update = (Button) activity.getActivity().findViewById(R.id.update_all);
-        cancel = (Button) activity.getActivity().findViewById(R.id.update_cancel);
-
-        update.setOnClickListener(v -> {
-            activity.launchUpdateAll();
-            update.setVisibility(View.GONE);
-            cancel.setVisibility(View.VISIBLE);
-            textView.setText(R.string.list_updating);
-        });
-
-        cancel.setOnClickListener(v -> {
-            query = new DownloadManager.Query();
-            query.setFilterByStatus(DownloadManager.STATUS_PENDING | DownloadManager.STATUS_RUNNING);
-            dm = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
-            Cursor c = dm.query(query);
-            while (c.moveToNext() == true) {
-                dm.remove(c.getLong(c.getColumnIndex(DownloadManager.COLUMN_ID)));
+    protected void processAuthException(AuthException e) {
+        AccountTypeDialogBuilder builder = new AccountTypeDialogBuilder(this.getActivity());
+        builder.setCaller(playStoreTask);
+        if (e instanceof CredentialsEmptyException) {
+            Log.i(getClass().getSimpleName(), "Credentials empty");
+            if (new FirstLaunchChecker(this.getActivity()).isFirstLogin() && ContextUtil.isAlive(this.getActivity())) {
+                Log.i(getClass().getSimpleName(), "First launch, so using built-in account");
+                builder.logInWithPredefinedAccount();
+                ContextUtil.toast(this.getActivity(), R.string.first_login_message);
+                return;
             }
-            update.setVisibility(View.VISIBLE);
-            cancel.setVisibility(View.GONE);
-            setText(R.id.updates_txt, R.string.list_update_all_txt, updatableApps.size());
-        });
+        } else if (e.getCode() == 401 && PreferenceFragment.getBoolean(this.getActivity(), PlayStoreApiAuthenticator.PREFERENCE_APP_PROVIDED_EMAIL)) {
+            Log.i(getClass().getSimpleName(), "Token is stale");
+            builder.refreshToken();
+            return;
+        } else {
+            ContextUtil.toast(this.getActivity(), R.string.error_incorrect_password);
+            new PlayStoreApiAuthenticator(this.getActivity()).logout();
+        }
+        if (ContextUtil.isAlive(this.getActivity())) {
+            builder.show();
+        } else {
+            Log.e(getClass().getSimpleName(), "AuthException happened and the provided context is not ui capable");
+        }
     }
 
-    protected void setText(int viewId, String text) {
-        TextView textView = ViewUtils.findViewById(activity.getActivity(), viewId);
-        if (null != textView)
-            textView.setText(text);
+    protected static boolean noNetwork(Throwable e) {
+        return e instanceof UnknownHostException
+                || e instanceof SSLHandshakeException
+                || e instanceof ConnectException
+                || e instanceof SocketException
+                || e instanceof SocketTimeoutException
+                || (null != e && null != e.getCause() && noNetwork(e.getCause()))
+                ;
     }
 
-    protected void setText(int viewId, int stringId, Object... text) {
-        setText(viewId, activity.getString(stringId, text));
+    protected void checkAppListValidity() {
+        AppListValidityCheckTask task = new AppListValidityCheckTask((GalaxyActivity) this.getActivity());
+        task.setRespectUpdateBlacklist(true);
+        task.setIncludeSystemApps(true);
+        task.execute();
     }
 }

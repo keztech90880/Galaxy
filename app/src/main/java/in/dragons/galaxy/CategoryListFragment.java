@@ -28,6 +28,7 @@ public class CategoryListFragment extends UtilFragment {
         v = inflater.inflate(R.layout.categories_activity_layout, container, false);
         getActivity().setTitle(getString(R.string.action_categories));
         setSearchView(this,true);
+
         CategoryManager manager = new CategoryManager(this.getActivity());
         getTask(manager).execute();
 

@@ -3,6 +3,7 @@ package in.dragons.galaxy;
 import android.Manifest;
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -45,7 +46,7 @@ public class GalaxyActivity extends BaseActivity implements NavigationView.OnNav
     private ActionBarDrawerToggle toggle;
     private Toolbar toolbar;
     private SearchView mSearchView;
-    private boolean doubleBackToExitPressedOnce = false;
+    private static Context context;
 
     protected Map<String, ListItem> listItems = new HashMap<>();
     protected AppListIterator iterator;
@@ -55,6 +56,7 @@ public class GalaxyActivity extends BaseActivity implements NavigationView.OnNav
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        GalaxyActivity.context = getApplicationContext();
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -88,9 +90,6 @@ public class GalaxyActivity extends BaseActivity implements NavigationView.OnNav
         getUser();
 
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-
-        if (savedInstanceState == null)
-            getFragmentManager().beginTransaction().replace(R.id.content_frame, new InstalledAppsFragment()).commit();
     }
 
     public void getUser() {
@@ -248,8 +247,6 @@ public class GalaxyActivity extends BaseActivity implements NavigationView.OnNav
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-
-        Fragment fragment = new UpdatableAppsFragment();
 
         switch (item.getItemId()) {
             case R.id.action_myapps:

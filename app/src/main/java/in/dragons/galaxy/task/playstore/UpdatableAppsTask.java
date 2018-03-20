@@ -1,12 +1,10 @@
 package in.dragons.galaxy.task.playstore;
 
 import android.app.Activity;
-import android.app.Dialog;
-import android.content.Context;
-import android.graphics.drawable.ColorDrawable;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
+import com.github.yeriomin.playstoreapi.BulkDetailsEntry;
 import com.github.yeriomin.playstoreapi.GooglePlayAPI;
 
 import java.io.IOException;
@@ -25,11 +23,12 @@ import in.dragons.galaxy.PlayStoreApiAuthenticator;
 import in.dragons.galaxy.PreferenceFragment;
 import in.dragons.galaxy.R;
 import in.dragons.galaxy.model.App;
+import in.dragons.galaxy.model.AppBuilder;
 import in.dragons.galaxy.task.InstalledAppsTask;
 
-public class UpdatableAppsTask extends RemoteAppListTask {
+public class UpdatableAppsTask extends PlayStorePayloadTask<List<App>> {
 
-    protected List<App> updatableApps = new ArrayList<>();
+    List<App> updatableApps = new ArrayList<>();
 
     @Override
     protected List<App> getResult(GooglePlayAPI api, String... packageNames) throws IOException {
@@ -60,7 +59,6 @@ public class UpdatableAppsTask extends RemoteAppListTask {
         super.processIOException(e);
         if (noNetwork(e) && context instanceof Activity) {
             ContextUtil.toast(context, R.string.error_no_network);
-            getNotNetworkDialog(context).show();
         }
     }
 
@@ -82,7 +80,7 @@ public class UpdatableAppsTask extends RemoteAppListTask {
         return task.getInstalledApps(false);
     }
 
-    protected List<App> getAppsFromPlayStore(GooglePlayAPI api, Collection<String> packageNames) throws IOException {
+    private List<App> getAppsFromPlayStore(GooglePlayAPI api, Collection<String> packageNames) throws IOException {
         List<App> appsFromPlayStore = new ArrayList<>();
         boolean builtInAccount = PreferenceFragment.getBoolean(context, PlayStoreApiAuthenticator.PREFERENCE_APP_PROVIDED_EMAIL);
         for (App app : getRemoteAppList(api, new ArrayList<>(packageNames))) {
@@ -109,11 +107,16 @@ public class UpdatableAppsTask extends RemoteAppListTask {
         return result;
     }
 
-    private Dialog getNotNetworkDialog(Context c) {
-        Dialog dialog = new Dialog(c);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
-        dialog.setContentView(R.layout.dialog_network)
-        ;
-        return dialog;
+    private List<App> getRemoteAppList(GooglePlayAPI api, List<String> packageNames) throws IOException {
+        List<App> apps = new ArrayList<>();
+        for (BulkDetailsEntry details : api.bulkDetails(packageNames).getEntryList()) {
+            if (!details.hasDoc()) {
+                continue;
+            }
+            apps.add(AppBuilder.build(details.getDoc()));
+        }
+        Collections.sort(apps);
+        return apps;
     }
+
 }

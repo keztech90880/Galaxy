@@ -4,8 +4,9 @@ import android.app.Fragment;
 import android.view.View;
 
 import com.percolate.caffeine.ViewUtils;
+import com.trello.rxlifecycle2.components.RxFragment;
 
-public abstract class UtilFragment extends Fragment {
+public abstract class UtilFragment extends RxFragment {
 
     public void setSearchView(Fragment f, Boolean b) {
         if (b)

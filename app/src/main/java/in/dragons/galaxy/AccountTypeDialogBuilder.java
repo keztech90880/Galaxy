@@ -85,7 +85,6 @@ public class AccountTypeDialogBuilder extends CredentialsDialogBuilder {
         @Override
         public void setCaller(PlayStoreTask caller) {
             super.setCaller(caller);
-            setProgressIndicator(caller.getProgressIndicator());
         }
 
         @Override

@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.percolate.caffeine.ViewUtils;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -41,10 +42,10 @@ public class GeneralDetails extends AbstractHelper {
     }
 
     private void drawAppBadge(App app) {
-        ImageView imageView = (ImageView) detailsFragment.getActivity().findViewById(R.id.icon);
+        ImageView imageView = ViewUtils.findViewById(detailsFragment.getActivity(), R.id.icon);
         ImageSource imageSource = app.getIconInfo();
         if (null != imageSource.getApplicationInfo()) {
-            imageView.setImageDrawable(imageView.getContext().getPackageManager().getApplicationIcon(imageSource.getApplicationInfo()));
+            imageView.setImageDrawable(detailsFragment.getActivity().getPackageManager().getApplicationIcon(imageSource.getApplicationInfo()));
         } else {
             Picasso
                     .with(detailsFragment.getActivity())
@@ -55,7 +56,7 @@ public class GeneralDetails extends AbstractHelper {
 
         setText(R.id.displayName, app.getDisplayName());
         setText(R.id.packageName, R.string.details_developer, app.getDeveloperName());
-        drawVersion((TextView) detailsFragment.getActivity().findViewById(R.id.versionString), app);
+        drawVersion(ViewUtils.findViewById(detailsFragment.getActivity(), R.id.versionString), app);
     }
 
     private void drawGeneralDetails(App app) {
@@ -159,9 +160,6 @@ public class GeneralDetails extends AbstractHelper {
             setText(R.id.description, Html.fromHtml(app.getDescription()).toString());
             initExpandableGroup(R.id.description_header, R.id.description_container);
             detailsFragment.getActivity().findViewById(R.id.more_card).setVisibility(View.VISIBLE);
-            if (app.getInstalledVersionCode() == 0 || TextUtils.isEmpty(app.getChanges())) {
-                //activity.findViewById(R.id.description_header).performClick();
-            }
         }
     }
 }

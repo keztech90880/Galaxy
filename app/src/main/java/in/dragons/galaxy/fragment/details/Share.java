@@ -1,8 +1,9 @@
 package in.dragons.galaxy.fragment.details;
 
 import android.content.Intent;
-import android.view.View;
 import android.widget.ImageView;
+
+import com.percolate.caffeine.ViewUtils;
 
 import in.dragons.galaxy.DetailsFragment;
 import in.dragons.galaxy.R;
@@ -18,17 +19,13 @@ public class Share extends AbstractHelper {
 
     @Override
     public void draw() {
-        ImageView share = (ImageView) detailsFragment.getActivity().findViewById(R.id.share);
-        share.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(Intent.ACTION_SEND);
-                i.setType("text/plain");
-                i.putExtra(Intent.EXTRA_SUBJECT, app.getDisplayName());
-                i.putExtra(Intent.EXTRA_TEXT, PLAYSTORE_LINK_PREFIX + app.getPackageName());
-                detailsFragment.getActivity().startActivity(Intent.createChooser(i, detailsFragment.getActivity().getString(R.string.details_share)));
-            }
+        ImageView share = ViewUtils.findViewById(detailsFragment.getActivity(), R.id.share);
+        share.setOnClickListener(v -> {
+            Intent i = new Intent(Intent.ACTION_SEND);
+            i.setType("text/plain");
+            i.putExtra(Intent.EXTRA_SUBJECT, app.getDisplayName());
+            i.putExtra(Intent.EXTRA_TEXT, PLAYSTORE_LINK_PREFIX + app.getPackageName());
+            detailsFragment.getActivity().startActivity(Intent.createChooser(i, detailsFragment.getActivity().getString(R.string.details_share)));
         });
     }
 }

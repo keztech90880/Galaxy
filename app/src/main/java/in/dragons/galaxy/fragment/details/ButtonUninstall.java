@@ -32,14 +32,14 @@ public class ButtonUninstall extends Button {
     }
 
     public void uninstall() {
-        if (isSystemAndReadyForPermanentUninstallation()) {
+        if (isSystemAndReadyForPermanentUninstall()) {
             askAndUninstall();
         } else {
             activity.startActivity(new Intent(Intent.ACTION_DELETE, Uri.parse("package:" + app.getPackageName())));
         }
     }
 
-    private boolean isSystemAndReadyForPermanentUninstallation() {
+    private boolean isSystemAndReadyForPermanentUninstall() {
         return app.isSystem()
                 && null != app.getPackageInfo().applicationInfo
                 && null != app.getPackageInfo().applicationInfo.sourceDir

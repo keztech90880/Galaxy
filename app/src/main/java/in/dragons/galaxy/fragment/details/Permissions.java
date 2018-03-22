@@ -23,12 +23,7 @@ public class Permissions extends AbstractHelper {
 
     @Override
     public void draw() {
-        initExpandableGroup(R.id.permissions_header, R.id.permissions_container, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                addPermissionWidgets();
-            }
-        });
+        initExpandableGroup(R.id.permissions_header, R.id.permissions_container, v -> addPermissionWidgets());
     }
 
     public Permissions(DetailsFragment detailsFragment, App app) {

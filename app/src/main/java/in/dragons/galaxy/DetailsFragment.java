@@ -83,7 +83,7 @@ public class DetailsFragment extends ForegroundDetailsAppsTaskHelper {
                     DetailsFragment.app = result;
                     this.redrawDetails(result);
 
-                }, throwable -> processException(throwable));
+                }, this::processException);
     }
 
     @Override

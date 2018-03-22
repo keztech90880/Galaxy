@@ -1,5 +1,6 @@
 package in.dragons.galaxy.fragment.details;
 
+import android.annotation.SuppressLint;
 import android.preference.PreferenceManager;
 
 import java.util.HashSet;
@@ -44,6 +45,7 @@ public class GoogleDependency extends AbstractHelper {
     }
 
     private void getTranslations(Set<String> untranslated) {
+        @SuppressLint("StaticFieldLeak")
         DependencyTranslationTask task = new DependencyTranslationTask() {
 
             @Override

@@ -1,6 +1,5 @@
 package in.dragons.galaxy.fragment.details;
 
-import in.dragons.galaxy.DetailsActivity;
 import in.dragons.galaxy.DetailsDownloadReceiver;
 import in.dragons.galaxy.DetailsInstallReceiver;
 import in.dragons.galaxy.GalaxyActivity;
@@ -19,9 +18,9 @@ public class DownloadOrInstall extends Abstract {
     public void draw() {
         new ButtonUninstall(activity, app).draw();
         new ButtonDownload(activity, app).draw();
-        new ButtonCancel((GalaxyActivity) activity, app).draw();
-        new ButtonInstall((GalaxyActivity) activity, app).draw();
-        new ButtonRun((GalaxyActivity) activity, app).draw();
+        new ButtonCancel(activity, app).draw();
+        new ButtonInstall(activity, app).draw();
+        new ButtonRun(activity, app).draw();
     }
 
     public void download() {
@@ -37,10 +36,10 @@ public class DownloadOrInstall extends Abstract {
 
     public void registerReceivers() {
         if (null == downloadReceiver) {
-            downloadReceiver = new DetailsDownloadReceiver((GalaxyActivity) activity, app.getPackageName());
+            downloadReceiver = new DetailsDownloadReceiver(activity, app.getPackageName());
         }
         if (null == installReceiver) {
-            installReceiver = new DetailsInstallReceiver((GalaxyActivity) activity, app.getPackageName());
+            installReceiver = new DetailsInstallReceiver(activity, app.getPackageName());
         }
     }
 }

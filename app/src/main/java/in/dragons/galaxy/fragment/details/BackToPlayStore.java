@@ -26,22 +26,24 @@ public class BackToPlayStore extends AbstractHelper {
         if (!isPlayStoreInstalled() || !app.isInPlayStore()) {
             return;
         }
-        ViewUtils.findViewById(detailsFragment.getActivity(),R.id.to_play_store_cnt).setVisibility(View.VISIBLE);
-        ImageView toPlayStore = (ImageView) detailsFragment.getActivity().findViewById(R.id.to_play_store);
+        ViewUtils.findViewById(detailsFragment.getActivity(),
+                R.id.to_play_store_cnt).setVisibility(View.VISIBLE);
+
+        ImageView toPlayStore = ViewUtils.findViewById(detailsFragment.getActivity(),
+                R.id.to_play_store);
+
         toPlayStore.setVisibility(View.VISIBLE);
-        toPlayStore.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(Intent.ACTION_VIEW);
-                i.setData(Uri.parse(PurchaseTask.URL_PURCHASE + app.getPackageName()));
-                detailsFragment.getActivity().startActivity(i);
-            }
+        toPlayStore.setOnClickListener(v -> {
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse(PurchaseTask.URL_PURCHASE + app.getPackageName()));
+            detailsFragment.getActivity().startActivity(i);
         });
     }
 
     private boolean isPlayStoreInstalled() {
         try {
-            return null != detailsFragment.getActivity().getPackageManager().getPackageInfo(PLAY_STORE_PACKAGE_NAME, 0);
+            return null != detailsFragment.getActivity().getPackageManager()
+                    .getPackageInfo(PLAY_STORE_PACKAGE_NAME, 0);
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }

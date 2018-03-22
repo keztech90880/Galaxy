@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.percolate.caffeine.ViewUtils;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -42,12 +43,7 @@ public class Review extends AbstractHelper {
             return;
         }
 
-        initExpandableGroup(R.id.reviews_header, R.id.reviews_container, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getTask(true).execute();
-            }
-        });
+        initExpandableGroup(R.id.reviews_header, R.id.reviews_container, v -> getTask(true).execute());
         detailsFragment.getActivity().findViewById(R.id.reviews_card).setVisibility(View.VISIBLE);
         initReviewListControls();
 
@@ -104,7 +100,7 @@ public class Review extends AbstractHelper {
     public void showReviews(List<in.dragons.galaxy.model.Review> reviews) {
         detailsFragment.getActivity().findViewById(R.id.reviews_previous).setVisibility(iterator.hasPrevious() ? View.VISIBLE : View.INVISIBLE);
         detailsFragment.getActivity().findViewById(R.id.reviews_next).setVisibility(iterator.hasNext() ? View.VISIBLE : View.INVISIBLE);
-        LinearLayout listView = (LinearLayout) detailsFragment.getActivity().findViewById(R.id.reviews_list);
+        LinearLayout listView = ViewUtils.findViewById(detailsFragment.getActivity(), R.id.reviews_list);
         listView.removeAllViews();
         for (in.dragons.galaxy.model.Review review : reviews) {
             addReviewToList(review, listView);
@@ -141,47 +137,35 @@ public class Review extends AbstractHelper {
     }
 
     private void initReviewListControls() {
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getTask(v.getId() == R.id.reviews_next).execute();
-            }
-        };
+        View.OnClickListener listener = v -> getTask(v.getId() == R.id.reviews_next).execute();
         detailsFragment.getActivity().findViewById(R.id.reviews_previous).setOnClickListener(listener);
         detailsFragment.getActivity().findViewById(R.id.reviews_next).setOnClickListener(listener);
     }
 
     private void initUserReviewControls(final App app) {
-        ((RatingBar) detailsFragment.getActivity().findViewById(R.id.user_stars)).setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-            @Override
-            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                if (!fromUser) {
-                    return;
-                }
-                new UserReviewDialogBuilder(detailsFragment.getActivity(), Review.this, app.getPackageName())
-                        .show(getUpdatedUserReview(app.getUserReview(), (int) rating));
+        ((RatingBar) detailsFragment.getActivity().findViewById(R.id.user_stars)).setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+            if (!fromUser) {
+                return;
             }
+            new UserReviewDialogBuilder(detailsFragment.getActivity(), Review.this, app.getPackageName())
+                    .show(getUpdatedUserReview(app.getUserReview(), (int) rating));
         });
-        detailsFragment.getActivity().findViewById(R.id.user_review_edit).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new UserReviewDialogBuilder(detailsFragment.getActivity(), Review.this, app.getPackageName())
-                        .show(app.getUserReview());
-            }
-        });
-        detailsFragment.getActivity().findViewById(R.id.user_review_delete).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ReviewDeleteTask task = new ReviewDeleteTask();
-                task.setFragment(Review.this);
-                task.setContext(v.getContext());
-                task.execute(app.getPackageName());
-            }
+
+        detailsFragment.getActivity().findViewById(R.id.user_review_edit).setOnClickListener(v ->
+                new UserReviewDialogBuilder(detailsFragment.getActivity(),
+                        Review.this, app.getPackageName())
+                        .show(app.getUserReview()));
+
+        detailsFragment.getActivity().findViewById(R.id.user_review_delete).setOnClickListener(v -> {
+            ReviewDeleteTask task = new ReviewDeleteTask();
+            task.setFragment(Review.this);
+            task.setContext(v.getContext());
+            task.execute(app.getPackageName());
         });
     }
 
     private void setTextOrHide(int viewId, String text) {
-        TextView textView = (TextView) detailsFragment.getActivity().findViewById(viewId);
+        TextView textView = ViewUtils.findViewById(detailsFragment.getActivity(), viewId);
         if (!TextUtils.isEmpty(text)) {
             textView.setText(text);
             textView.setVisibility(View.VISIBLE);

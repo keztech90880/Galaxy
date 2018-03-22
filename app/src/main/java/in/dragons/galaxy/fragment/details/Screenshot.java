@@ -1,9 +1,9 @@
 package in.dragons.galaxy.fragment.details;
 
 import android.content.Intent;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Gallery;
+
+import com.percolate.caffeine.ViewUtils;
 
 import in.dragons.galaxy.DetailsFragment;
 import in.dragons.galaxy.FullscreenImageActivity;
@@ -19,25 +19,18 @@ public class Screenshot extends AbstractHelper {
 
     @Override
     public void draw() {
-        if (app.getScreenshotUrls().size() > 0) {
-            drawGallery();
-        } else {
-            return;
-        }
+        if (app.getScreenshotUrls().size() > 0) drawGallery();
     }
 
     private void drawGallery() {
-        Gallery gallery = ((Gallery) detailsFragment.getActivity().findViewById(R.id.screenshots_gallery));
+        Gallery gallery = (ViewUtils.findViewById(detailsFragment.getActivity(), R.id.screenshots_gallery));
         int screenWidth = detailsFragment.getActivity().getWindowManager().getDefaultDisplay().getWidth();
         gallery.setAdapter(new ImageAdapter(detailsFragment.getActivity(), app.getScreenshotUrls(), screenWidth));
         gallery.setSpacing(15);
-        gallery.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(detailsFragment.getActivity(), FullscreenImageActivity.class);
-                intent.putExtra(FullscreenImageActivity.INTENT_SCREENSHOT_NUMBER, position);
-                detailsFragment.getActivity().startActivity(intent);
-            }
+        gallery.setOnItemClickListener((parent, view, position, id) -> {
+            Intent intent = new Intent(detailsFragment.getActivity(), FullscreenImageActivity.class);
+            intent.putExtra(FullscreenImageActivity.INTENT_SCREENSHOT_NUMBER, position);
+            detailsFragment.getActivity().startActivity(intent);
         });
     }
 }

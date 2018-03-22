@@ -3,10 +3,11 @@ package in.dragons.galaxy.fragment.details;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+
+import com.percolate.caffeine.ViewUtils;
 
 import in.dragons.galaxy.DetailsFragment;
 import in.dragons.galaxy.R;
@@ -23,14 +24,9 @@ public class SystemAppPage extends AbstractHelper {
         if (!app.isInstalled()) {
             return;
         }
-        ImageView systemAppInfo = (ImageView) detailsFragment.getActivity().findViewById(R.id.system_app_info);
+        ImageView systemAppInfo = ViewUtils.findViewById(detailsFragment.getActivity(), R.id.system_app_info);
         systemAppInfo.setVisibility(View.VISIBLE);
-        systemAppInfo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity();
-            }
-        });
+        systemAppInfo.setOnClickListener(v -> startActivity());
     }
 
     private void startActivity() {
@@ -43,14 +39,7 @@ public class SystemAppPage extends AbstractHelper {
 
     private Intent getIntent() {
         Intent intent;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            intent = new Intent("android.settings.APPLICATION_DETAILS_SETTINGS", Uri.parse("package:" + app.getPackageName()));
-        } else {
-            intent = new Intent(Intent.ACTION_VIEW);
-            intent.setClassName("com.android.settings", "com.android.settings.InstalledAppDetails");
-            intent.putExtra("com.android.settings.ApplicationPkgName", app.getPackageName());
-            intent.putExtra("pkg", app.getPackageName());
-        }
+        intent = new Intent("android.settings.APPLICATION_DETAILS_SETTINGS", Uri.parse("package:" + app.getPackageName()));
         return intent;
     }
 }

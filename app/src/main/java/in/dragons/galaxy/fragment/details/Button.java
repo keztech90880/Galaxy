@@ -28,15 +28,10 @@ public abstract class Button extends Abstract {
         }
         button.setEnabled(true);
         button.setVisibility(shouldBeVisible() ? View.VISIBLE : View.GONE);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onButtonClick(v);
-            }
-        });
+        button.setOnClickListener(this::onButtonClick);
     }
 
-    protected void disable(int stringId) {
+    void disable(int stringId) {
         if (null == button) {
             return;
         }

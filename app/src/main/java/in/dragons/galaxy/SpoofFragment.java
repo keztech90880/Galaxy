@@ -1,12 +1,12 @@
 package in.dragons.galaxy;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.ImageViewCompat;
 import android.view.Display;
@@ -15,8 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import com.percolate.caffeine.ViewUtils;
 
 import java.util.Properties;
 import java.util.TimeZone;
@@ -35,11 +33,9 @@ public class SpoofFragment extends UtilFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         v = inflater.inflate(R.layout.app_device_inc, container, false);
-        getActivity().setTitle(R.string.action_spoofed);
-        setSearchView(this,false);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getActivity());
         deviceName = sharedPreferences.getString(PreferenceFragment.PREFERENCE_DEVICE_TO_PRETEND_TO_BE, "");

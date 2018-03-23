@@ -1,23 +1,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <group
-        android:id="@+id/group1"
-        android:checkableBehavior="single">
+    <group android:id="@+id/group1">
         <item
             android:id="@+id/action_myapps"
-            android:icon="@drawable/ic_apps"
+            android:icon="@drawable/ic_home"
             android:title="@string/action_apps" />
-        <item
-            android:id="@+id/action_updates"
-            android:icon="@drawable/ic_update"
-            android:title="@string/action_updates" />
-        <item
-            android:id="@+id/action_categories"
-            android:icon="@drawable/ic_categories"
-            android:title="@string/action_categories" />
     </group>
-    <group
-        android:id="@+id/group2"
-        android:checkableBehavior="single">
+    <group android:id="@+id/group2">
         <item
             android:id="@+id/action_accounts"
             android:icon="@drawable/ic_account"
@@ -27,9 +15,7 @@
             android:icon="@drawable/app_dev"
             android:title="@string/action_spoofed" />
     </group>
-    <group
-        android:id="@+id/group3"
-        android:checkableBehavior="single">
+    <group android:id="@+id/group3">
         <item
             android:id="@+id/action_themes"
             android:icon="@drawable/ic_theme"

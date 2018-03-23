@@ -7,10 +7,11 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-
-import com.percolate.caffeine.ViewUtils;
+import android.view.ViewGroup;
 
 import in.dragons.galaxy.fragment.preference.Blacklist;
 import in.dragons.galaxy.fragment.preference.CheckUpdates;
@@ -68,12 +69,15 @@ public class PreferenceFragment extends android.preference.PreferenceFragment {
     }
 
     @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        this.getActivity().setTitle(R.string.action_settings);
+        return super.onCreateView(inflater, container, savedInstanceState);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.settings);
-        getActivity().setTitle(R.string.action_settings);
-        ViewUtils.findViewById(this.getActivity(),R.id.search_toolbar).setVisibility(View.GONE);
-
         drawBlackList();
         drawLanguages();
         drawUpdatesCheck();

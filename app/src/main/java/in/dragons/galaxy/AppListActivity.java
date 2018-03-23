@@ -92,7 +92,7 @@ abstract public class AppListActivity extends GalaxyActivity {
         Bundle arguments = new Bundle();
         arguments.putString("PackageName", DetailsFragment.app.getPackageName());
         detailsFragment.setArguments(arguments);
-        getFragmentManager().beginTransaction().addToBackStack(null).replace(R.id.content_frame, detailsFragment).commit();
+        getSupportFragmentManager().beginTransaction().addToBackStack(null).replace(R.id.content_frame, detailsFragment).commit();
     }
 
     public void onContentChange() {

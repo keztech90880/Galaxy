@@ -2,11 +2,11 @@ package in.dragons.galaxy;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Fragment;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.ImageViewCompat;
 import android.view.LayoutInflater;
@@ -39,10 +39,9 @@ public class AccountsFragment extends UtilFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.app_acc_inc, container, false);
         getActivity().setTitle(R.string.action_accounts);
-        setSearchView(this,false);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         Email = sharedPreferences.getString(PlayStoreApiAuthenticator.PREFERENCE_EMAIL, "");

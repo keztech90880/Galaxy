@@ -1,16 +1,18 @@
 package in.dragons.galaxy;
 
 import android.Manifest;
-import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.SearchView;
@@ -72,6 +74,12 @@ public class GalaxyActivity extends BaseActivity implements NavigationView.OnNav
 
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+        ViewPagerAdapter viewPagerAdapter = new ViewPagerAdapter(this, getSupportFragmentManager());
+        viewPager.setAdapter(viewPagerAdapter);
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
+        tabLayout.setupWithViewPager(viewPager);
 
         if (Aesthetic.isFirstTime()) {
             Aesthetic.get()
@@ -193,16 +201,16 @@ public class GalaxyActivity extends BaseActivity implements NavigationView.OnNav
     }
 
     public ListView getListView() {
-        return (ListView) this.getFragmentManager().findFragmentById(R.id.content_frame).getView().findViewById(android.R.id.list);
+        return (ListView) this.getSupportFragmentManager().findFragmentById(R.id.content_frame).getView().findViewById(android.R.id.list);
     }
 
     public void setIterator(AppListIterator iterator) {
-        SearchFragment searchFragment = (SearchFragment) getFragmentManager().findFragmentByTag("SEARCH");
+        SearchFragment searchFragment = (SearchFragment) getSupportFragmentManager().findFragmentByTag("SEARCH");
         if (searchFragment != null && searchFragment.isVisible()) {
-            searchFragment = (SearchFragment) getFragmentManager().findFragmentById(R.id.content_frame);
+            searchFragment = (SearchFragment) getSupportFragmentManager().findFragmentById(R.id.content_frame);
             searchFragment.setIterator(iterator);
         } else {
-            EndlessScrollFragment endlessScrollFragment = (EndlessScrollFragment) getFragmentManager().findFragmentById(R.id.content_frame);
+            EndlessScrollFragment endlessScrollFragment = (EndlessScrollFragment) getSupportFragmentManager().findFragmentById(R.id.content_frame);
             endlessScrollFragment.setIterator(iterator);
         }
     }
@@ -249,29 +257,20 @@ public class GalaxyActivity extends BaseActivity implements NavigationView.OnNav
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.action_myapps:
-                getFragmentManager().beginTransaction().addToBackStack(null).replace(R.id.content_frame, new InstalledAppsFragment()).commit();
-                break;
-            case R.id.action_updates:
-                getFragmentManager().beginTransaction().addToBackStack(null).replace(R.id.content_frame, new UpdatableAppsFragment(), "UPDATES").commit();
-                break;
-            case R.id.action_categories:
-                getFragmentManager().beginTransaction().addToBackStack(null).replace(R.id.content_frame, new CategoryListFragment()).commit();
-                break;
             case R.id.action_settings:
-                getFragmentManager().beginTransaction().addToBackStack(null).replace(R.id.content_frame, new PreferenceFragment()).commit();
-                break;
-            case R.id.action_spoofed:
-                getFragmentManager().beginTransaction().addToBackStack(null).replace(R.id.content_frame, new SpoofFragment()).commit();
+                startActivity(new Intent(this, PreferenceActivity.class));
                 break;
             case R.id.action_accounts:
-                getFragmentManager().beginTransaction().addToBackStack(null).replace(R.id.content_frame, new AccountsFragment()).commit();
+                startActivity(new Intent(this, AccountsActivity.class));
+                break;
+            case R.id.action_spoofed:
+                startActivity(new Intent(this, SpoofActivity.class));
                 break;
             case R.id.action_themes:
-                getFragmentManager().beginTransaction().addToBackStack(null).replace(R.id.content_frame, new ThemesFragment()).commit();
+                startActivity(new Intent(this, ThemesActivity.class));
                 break;
             case R.id.action_about:
-                getFragmentManager().beginTransaction().addToBackStack(null).replace(R.id.content_frame, new AboutFragment()).commit();
+                startActivity(new Intent(this, AboutActivity.class));
                 break;
         }
 

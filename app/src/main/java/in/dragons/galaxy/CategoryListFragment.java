@@ -1,7 +1,6 @@
 package in.dragons.galaxy;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -26,8 +25,6 @@ public class CategoryListFragment extends UtilFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.categories_activity_layout, container, false);
-        getActivity().setTitle(getString(R.string.action_categories));
-        setSearchView(this,true);
 
         CategoryManager manager = new CategoryManager(this.getActivity());
         getTask(manager).execute();

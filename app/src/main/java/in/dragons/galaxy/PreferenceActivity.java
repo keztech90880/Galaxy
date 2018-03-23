@@ -5,7 +5,8 @@ import android.support.v7.widget.Toolbar;
 
 import com.percolate.caffeine.ViewUtils;
 
-public class AccountsActivity extends GalaxyActivity {
+
+public class PreferenceActivity extends GalaxyActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -17,9 +18,9 @@ public class AccountsActivity extends GalaxyActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        getSupportFragmentManager()
+        getFragmentManager()
                 .beginTransaction()
-                .replace(R.id.content_frame, new AccountsFragment())
+                .replace(R.id.content_frame, new PreferenceFragment())
                 .addToBackStack(null)
                 .commit();
     }
@@ -35,4 +36,5 @@ public class AccountsActivity extends GalaxyActivity {
         onBackPressed();
         return true;
     }
+
 }

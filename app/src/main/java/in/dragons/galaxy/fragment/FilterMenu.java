@@ -1,11 +1,10 @@
 package in.dragons.galaxy.fragment;
 
 import android.app.AlertDialog;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -112,8 +111,8 @@ public class FilterMenu {
     }
 
     private void restartFragment() {
-        Fragment fragment = activity.getFragmentManager().findFragmentById(R.id.content_frame);
-        final FragmentTransaction fragmentTransaction = activity.getFragmentManager().beginTransaction();
+        Fragment fragment = activity.getSupportFragmentManager().findFragmentById(R.id.content_frame);
+        final android.support.v4.app.FragmentTransaction fragmentTransaction = activity.getSupportFragmentManager().beginTransaction();
         fragmentTransaction.detach(fragment);
         fragmentTransaction.attach(fragment);
         fragmentTransaction.commit();

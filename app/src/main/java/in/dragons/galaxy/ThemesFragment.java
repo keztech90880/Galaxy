@@ -1,10 +1,9 @@
 package in.dragons.galaxy;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,12 +24,10 @@ public class ThemesFragment extends UtilFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         v = inflater.inflate(R.layout.app_theme_inc, container, false);
         getActivity().setTitle(R.string.action_themes);
-        setSearchView(this,false);
-
         setupSelection();
         setupTheme();
         setupFab();
@@ -47,11 +44,11 @@ public class ThemesFragment extends UtilFragment {
                 .cancelButton(R.string.md_cancel_label)
                 .backButton(R.string.md_back_label)
                 .dynamicButtonColor(true)
-                .show((FragmentActivity) getActivity());
+                .show(getActivity());
     }
 
     private void setupFab() {
-        FloatingActionButton fab = (FloatingActionButton) getActivity().findViewById(R.id.fab);
+        FloatingActionButton fab = ViewUtils.findViewById(this.getActivity(), R.id.fab);
         fab.setVisibility(View.VISIBLE);
         fab.setImageResource(R.drawable.ic_theme);
         fab.setOnClickListener(view -> Aesthetic.get()

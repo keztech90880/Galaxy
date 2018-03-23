@@ -2,7 +2,6 @@ package in.dragons.galaxy;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
-import android.app.Fragment;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
@@ -158,7 +158,7 @@ public abstract class BaseActivity extends AestheticActivity {
         Bundle arguments = new Bundle();
         arguments.putString(SearchManager.QUERY, query);
         myFragment.setArguments(arguments);
-        getFragmentManager().beginTransaction().replace(R.id.content_frame, myFragment,"SEARCH").addToBackStack(null).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, myFragment,"SEARCH").addToBackStack(null).commit();
     }
 
     AlertDialog showLogOutDialog() {

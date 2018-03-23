@@ -1,10 +1,10 @@
 package in.dragons.galaxy;
 
-import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +14,6 @@ import android.widget.TextView;
 
 import com.afollestad.aesthetic.Aesthetic;
 import com.percolate.caffeine.ViewUtils;
-
-import java.util.ArrayList;
 
 public class TopCategoriesAdapter extends RecyclerView.Adapter<TopCategoriesAdapter.ViewHolder> {
 
@@ -75,7 +73,7 @@ public class TopCategoriesAdapter extends RecyclerView.Adapter<TopCategoriesAdap
             Bundle arguments = new Bundle();
             arguments.putString("CategoryID", categories[holder.getAdapterPosition()]);
             myFragment.setArguments(arguments);
-            activity.getFragmentManager().beginTransaction().replace(R.id.content_frame, myFragment, "BAZINGA").addToBackStack(null).commit();
+            activity.getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, myFragment, "BAZINGA").addToBackStack(null).commit();
         });
     }
 

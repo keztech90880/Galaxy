@@ -1,12 +1,12 @@
 package in.dragons.galaxy;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,11 +25,10 @@ public class AboutFragment extends UtilFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         v = inflater.inflate(R.layout.app_abt_inc, container, false);
         getActivity().setTitle(R.string.action_about);
-        setSearchView(this,false);
 
         drawVersion();
         drawActions();
@@ -52,23 +51,17 @@ public class AboutFragment extends UtilFragment {
 
     private void drawActions() {
         final Intent browserIntent = new Intent(Intent.ACTION_VIEW);
-        ((TextView) v.findViewById(R.id.github)).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                browserIntent.setData(Uri.parse(getResources().getString(R.string.linkGit)));
-                startActivity(browserIntent);
-            }
+        ((TextView) v.findViewById(R.id.github)).setOnClickListener(v -> {
+            browserIntent.setData(Uri.parse(getResources().getString(R.string.linkGit)));
+            startActivity(browserIntent);
         });
-        ((TextView) v.findViewById(R.id.xda)).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                browserIntent.setData(Uri.parse(getResources().getString(R.string.linkXDA)));
-                startActivity(browserIntent);
-            }
+        ((TextView) v.findViewById(R.id.xda)).setOnClickListener(v -> {
+            browserIntent.setData(Uri.parse(getResources().getString(R.string.linkXDA)));
+            startActivity(browserIntent);
         });
-        ((TextView) v.findViewById(R.id.telegram)).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                browserIntent.setData(Uri.parse(getResources().getString(R.string.linkTelegram)));
-                startActivity(browserIntent);
-            }
+        ((TextView) v.findViewById(R.id.telegram)).setOnClickListener(v -> {
+            browserIntent.setData(Uri.parse(getResources().getString(R.string.linkTelegram)));
+            startActivity(browserIntent);
         });
     }
 

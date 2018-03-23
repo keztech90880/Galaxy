@@ -17,11 +17,8 @@ import android.widget.TextView;
 import com.percolate.caffeine.ViewUtils;
 import com.trello.rxlifecycle2.android.FragmentEvent;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
-import in.dragons.galaxy.model.App;
 import in.dragons.galaxy.task.playstore.ForegroundUpdatableAppsTaskHelper;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -52,8 +49,6 @@ public class UpdatableAppsFragment extends ForegroundUpdatableAppsTaskHelper {
             return v;
         }
 
-        getActivity().setTitle(getString(R.string.activity_title_updates_only));
-
         v = inflater.inflate(R.layout.app_updatable_inc, container, false);
 
         setupListView(v, R.layout.two_line_list_item_with_icon);
@@ -72,7 +67,7 @@ public class UpdatableAppsFragment extends ForegroundUpdatableAppsTaskHelper {
     @Override
     public void onResume() {
         super.onResume();
-        getActivity().setTitle(getString(R.string.activity_title_updates_only));
+        setSearchView(this, true);
         new UpdateAllReceiver((GalaxyActivity) this.getActivity());
         checkAppListValidity();
     }

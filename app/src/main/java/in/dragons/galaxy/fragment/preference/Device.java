@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.view.View;
-import android.widget.AdapterView;
 
 import com.github.yeriomin.playstoreapi.PropertiesDeviceInfoProvider;
 
@@ -37,27 +35,21 @@ public class Device extends List {
     @Override
     public void draw() {
         super.draw();
-        listPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                ContextUtil.toast(
-                        activity.getActivity().getApplicationContext(),
-                        R.string.pref_device_to_pretend_to_be_notice,
-                        PreferenceManager.getDefaultSharedPreferences(activity.getActivity()).getString(PreferenceFragment.PREFERENCE_DOWNLOAD_DIRECTORY, "")
-                );
-                ((AlertDialog) listPreference.getDialog()).getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-                    @Override
-                    public boolean onItemLongClick(AdapterView<?> parent, View v, int position, long id) {
-                        if (position > 0) {
-                            Intent i = new Intent(activity.getActivity(), DeviceInfoActivity.class);
-                            i.putExtra(DeviceInfoActivity.INTENT_DEVICE_NAME, (String) keyValueMap.keySet().toArray()[position]);
-                            activity.startActivity(i);
-                        }
-                        return false;
-                    }
-                });
+        listPreference.setOnPreferenceClickListener(preference -> {
+            ContextUtil.toast(
+                    activity.getActivity().getApplicationContext(),
+                    R.string.pref_device_to_pretend_to_be_notice,
+                    PreferenceManager.getDefaultSharedPreferences(activity.getActivity()).getString(PreferenceFragment.PREFERENCE_DOWNLOAD_DIRECTORY, "")
+            );
+            ((AlertDialog) listPreference.getDialog()).getListView().setOnItemLongClickListener((parent, v, position, id) -> {
+                if (position > 0) {
+                    Intent i = new Intent(activity.getActivity(), DeviceInfoActivity.class);
+                    i.putExtra(DeviceInfoActivity.INTENT_DEVICE_NAME, (String) keyValueMap.keySet().toArray()[position]);
+                    activity.startActivity(i);
+                }
                 return false;
-            }
+            });
+            return false;
         });
     }
 
@@ -101,7 +93,7 @@ public class Device extends List {
         PreferenceManager.getDefaultSharedPreferences(activity.getActivity())
                 .edit()
                 .putBoolean(PREFERENCE_DEVICE_DEFINITION_REQUESTED, true)
-                .commit()
+                .apply()
         ;
         return true;
     }

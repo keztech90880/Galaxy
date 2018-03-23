@@ -1,12 +1,11 @@
 package in.dragons.galaxy;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.view.View;
 
 import com.percolate.caffeine.ViewUtils;
-import com.trello.rxlifecycle2.components.RxFragment;
 
-public abstract class UtilFragment extends RxFragment {
+public abstract class UtilFragment extends com.trello.rxlifecycle2.components.support.RxFragment {
 
     public void setSearchView(Fragment f, Boolean b) {
         if (b)

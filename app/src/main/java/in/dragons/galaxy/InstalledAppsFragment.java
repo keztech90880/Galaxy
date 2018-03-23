@@ -47,12 +47,9 @@ public class InstalledAppsFragment extends ForegroundInstalledAppsTaskHelper {
             return v;
         }
 
-        getActivity().setTitle(R.string.activity_title_updates_and_other_apps);
-
         v = inflater.inflate(R.layout.app_installed_inc, container, false);
 
         setupListView(v, R.layout.two_line_list_item_with_icon);
-        setSearchView(this, true);
 
         loadApps();
 
